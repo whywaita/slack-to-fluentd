@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/fluent/fluent-logger-golang/fluent"
 	"github.com/nlopes/slack"
 	"github.com/whywaita/slack_lib"
 )
@@ -21,22 +20,11 @@ func structToJsonTagMap(data interface{}) map[string]interface{} {
 }
 
 func main() {
-	fluentHost := os.Getenv("FLUENT_HOST")
-	if fluentHost == "" {
-		fluentHost = "localhost"
-	}
 	slackToken := os.Getenv("SLACK_TOKEN")
 	if slackToken == "" {
 		log.Fatal("SLACK_TOKEN must be set")
 	}
 
-	flogger, err := fluent.New(fluent.Config{FluentHost: fluentHost})
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer flogger.Close()
-
-	tag := "slack.posts"
 	api := slack.New(slackToken)
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
@@ -61,13 +49,6 @@ func main() {
 				continue
 			}
 
-			msg := structToJsonTagMap(r)
-			err = flogger.Post(tag, msg)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
 		case *slack.PresenceChangeEvent:
 			// fmt.Printf("Presence Change: %v\n", ev)
 
@@ -83,7 +64,8 @@ func main() {
 
 		default:
 			// Ignore other events..
-			fmt.Printf("Unexpected: %v\n", msg.Data)
+			// fmt.Printf("Unexpected: %v\n", msg.Data)
+			fmt.Printf("Unexpected: %v\n", msg)
 
 		}
 	}
