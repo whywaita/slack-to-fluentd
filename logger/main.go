@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/fluent/fluent-logger-golang/fluent"
 	"github.com/nlopes/slack"
 	"github.com/whywaita/slack_lib"
 )
@@ -24,7 +25,18 @@ func main() {
 	if slackToken == "" {
 		log.Fatal("SLACK_TOKEN must be set")
 	}
+	fluentHost := os.Getenv("FLUENTD_HOST")
+	if fluentHost == "" {
+		log.Fatal("FLUENTD_HOST must be set")
+	}
 
+	flogger, err := fluent.New(fluent.Config{FluentHost: fluentHost})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer flogger.Close()
+
+	tag := "slack.post"
 	api := slack.New(slackToken)
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
@@ -44,6 +56,13 @@ func main() {
 		case *slack.MessageEvent:
 			fmt.Printf("Message: %v\n", ev.Msg)
 			r, err := slack_lib.ConvertReadableName(api, ev)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			msg := structToJsonTagMap(r)
+			err = flogger.Post(tag, msg)
 			if err != nil {
 				fmt.Println(err)
 				continue
