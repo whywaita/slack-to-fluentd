@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  logger:
+    build:
+      context: ./logger/
+    restart: always
+    depends_on:
+      - fluentd
+    environment:
+      - SLACK_TOKEN=
+      - FLUENTD_HOST="fluentd"
+    networks:
+      - network
+
+  fluentd:
+    container_name: fluentd
+    image: fluent/fluentd:v0.14.20
+    expose:
+      - "24224"
+      - "5140"
+    networks:
+      - network
+
+networks:
+  network:
