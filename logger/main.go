@@ -11,7 +11,7 @@ import (
 	"github.com/whywaita/slack_lib"
 )
 
-func structToJsonTagMap(data interface{}) map[string]interface{} {
+func structToJSONTagMap(data interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	b, _ := json.Marshal(data)
@@ -61,7 +61,7 @@ func main() {
 				continue
 			}
 
-			msg := structToJsonTagMap(r)
+			msg := structToJSONTagMap(r)
 			err = flogger.Post(tag, msg)
 			if err != nil {
 				fmt.Println(err)
