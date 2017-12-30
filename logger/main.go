@@ -1,10 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
 	"github.com/nlopes/slack"
@@ -13,10 +14,22 @@ import (
 
 func structToJSONTagMap(data interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
-
-	b, _ := json.Marshal(data)
-	json.Unmarshal(b, &result)
-
+	typ := reflect.TypeOf(data)
+	// should check data is struct or not
+	val := reflect.ValueOf(data)
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		vi := val.FieldByName(field.Name).Interface()
+		// if field is struct, convert recursively
+		if field.Type.Kind() == reflect.Struct {
+			vi = structToJsonTagMap(vi)
+		}
+		if tag, ok := field.Tag.Lookup("json"); ok {
+			result[tag] = vi
+			continue
+		}
+		result[strings.ToLower(field.Name)] = vi
+	}
 	return result
 }
 
