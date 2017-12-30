@@ -1,26 +1,44 @@
 version: '3'
 
 services:
-  logger:
-    build:
-      context: ./logger/
-    restart: always
-    depends_on:
-      - fluentd
-    environment:
-      - SLACK_TOKEN=
-      - FLUENTD_HOST="fluentd"
-    networks:
-      - network
+  # logger:
+  #   build:
+  #     context: ./logger/
+  #   restart: always
+  #   depends_on:
+  #     - fluentd
+  #   environment:
+  #     - SLACK_TOKEN=""
+  #     - FLUENTD_HOST="slack_to_fluentd"
+  #   networks:
+  #     - my_network
 
   fluentd:
-    container_name: fluentd
-    image: fluent/fluentd:v0.14.20
-    expose:
-      - "24224"
-      - "5140"
+    container_name: slack_to_fluentd
+    build: fluentd
+    ports:
+      - "24224:24224"
+    volumes:
+      - "./fluentd/fluent.conf:/fluentd/etc/fluent.conf"
     networks:
-      - network
+      - my_network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:alpine
+    expose:
+      - 9200
+    networks:
+      - my_network
+
+  kibana:
+    image: kibana:5.1
+    links:
+        - elasticsearch:elasticsearch
+    ports:
+        - 5601:5601
+    networks:
+      - my_network
 
 networks:
-  network:
+  my_network:
