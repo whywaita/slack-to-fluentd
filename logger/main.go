@@ -22,7 +22,7 @@ func structToJSONTagMap(data interface{}) map[string]interface{} {
 		vi := val.FieldByName(field.Name).Interface()
 		// if field is struct, convert recursively
 		if field.Type.Kind() == reflect.Struct {
-			vi = structToJsonTagMap(vi)
+			vi = structToJSONTagMap(vi)
 		}
 		if tag, ok := field.Tag.Lookup("json"); ok {
 			result[tag] = vi
